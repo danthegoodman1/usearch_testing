@@ -302,11 +302,16 @@ fn distributed_search_with_reranking() -> Result<(), Box<dyn std::error::Error>>
             );
         }
 
-        // Compute ground-truth global top-K by exact per-shard + merge
+        // Compute ground-truth global top-K by exact per-shard + merge (timed)
+        let gt_total_start = Instant::now();
         let mut all_exact: Vec<(u64, f32)> = Vec::with_capacity(SHARDS * EXACT_GT_PER_SHARD);
+        let mut per_shard_exact_stats: Vec<(usize, std::time::Duration)> = Vec::with_capacity(SHARDS);
         for shard in shards.iter() {
             let per_shard_k = EXACT_GT_PER_SHARD.min(shard.size());
+            let shard_exact_start = Instant::now();
             let exact = shard.exact_search(query, per_shard_k)?;
+            let shard_exact_elapsed = shard_exact_start.elapsed();
+            per_shard_exact_stats.push((per_shard_k, shard_exact_elapsed));
             for (k, d) in exact.keys.iter().zip(exact.distances.iter()) {
                 all_exact.push((*k, *d));
             }
@@ -314,6 +319,11 @@ fn distributed_search_with_reranking() -> Result<(), Box<dyn std::error::Error>>
         // Distances: lower is better across metrics (IP returns negative distances)
         all_exact.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
         all_exact.truncate(TOP_K);
+
+        println!("  • Ground-truth exact + merge took {:?}", gt_total_start.elapsed());
+        for (i, (k, dur)) in per_shard_exact_stats.iter().enumerate() {
+            println!("    • Shard {} exact_search({}) took {:?}", i, k, dur);
+        }
 
         let gt_keys: HashSet<u64> = all_exact.iter().map(|(k, _)| *k).collect();
         let pred_keys: HashSet<u64> = final_matches.keys.iter().cloned().collect();
