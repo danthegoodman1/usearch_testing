@@ -4,6 +4,7 @@ use std::fs;
 use std::io::{Read, Write};
 use std::time::Instant;
 use std::collections::HashSet;
+use std::path::Path;
 use usearch::{Index, IndexOptions, MetricKind, ScalarKind, new_index};
 
 const DIMS: usize = 128;
@@ -66,6 +67,16 @@ fn build_shards() -> Result<(), Box<dyn std::error::Error>> {
         let shard_start = Instant::now();
         println!("  Building shard {}...", shard_id);
 
+        // Skip building this shard if the file already exists
+        let shard_path = format!("./shard_{}.index", shard_id);
+        if Path::new(&shard_path).exists() {
+            println!(
+                "  Shard {} already exists at {}, skipping.",
+                shard_id, shard_path
+            );
+            continue;
+        }
+
         let index_creation_start = Instant::now();
         let index: Index = new_index(&options)?;
         index.reserve(VECTORS_PER_SHARD)?;
@@ -91,7 +102,6 @@ fn build_shards() -> Result<(), Box<dyn std::error::Error>> {
 
         // Save shard to disk
         let save_start = Instant::now();
-        let shard_path = format!("./shard_{}.index", shard_id);
         index.save(&shard_path)?;
         println!("    • Saving to disk: {:?}", save_start.elapsed());
 
@@ -107,17 +117,25 @@ fn build_shards() -> Result<(), Box<dyn std::error::Error>> {
     println!("Total shard building time: {:?}", total_start.elapsed());
 
     // Generate and save test vectors
-    println!("\nGenerating {} test vectors...", TEST_VECTORS_COUNT);
-    let test_vectors = generate_random_vectors(TEST_VECTORS_COUNT, DIMS, 99999);
+    let test_vectors_path = "test_vectors.bin";
+    if Path::new(test_vectors_path).exists() {
+        println!(
+            "Test vectors already exist at {}, skipping generation.",
+            test_vectors_path
+        );
+    } else {
+        println!("\nGenerating {} test vectors...", TEST_VECTORS_COUNT);
+        let test_vectors = generate_random_vectors(TEST_VECTORS_COUNT, DIMS, 99999);
 
-    // Save test vectors as binary file
-    let mut file = fs::File::create("test_vectors.bin")?;
-    for vector in &test_vectors {
-        for value in vector {
-            file.write_all(&value.to_ne_bytes())?;
+        // Save test vectors as binary file
+        let mut file = fs::File::create(test_vectors_path)?;
+        for vector in &test_vectors {
+            for value in vector {
+                file.write_all(&value.to_ne_bytes())?;
+            }
         }
+        println!("Test vectors saved to {}", test_vectors_path);
     }
-    println!("Test vectors saved to test_vectors.bin");
 
     Ok(())
 }
@@ -348,17 +366,17 @@ fn distributed_search_with_reranking() -> Result<(), Box<dyn std::error::Error>>
 }
 
 fn main() {
-    // // Build shards and save test vectors
-    // if let Err(e) = build_shards() {
-    //     eprintln!("Error building shards: {}", e);
-    //     return;
-    // }
+    // Build shards and save test vectors
+    if let Err(e) = build_shards() {
+        eprintln!("Error building shards: {}", e);
+        return;
+    }
 
-    // // Compare memory usage between load and view
-    // if let Err(e) = compare_memory_usage() {
-    //     eprintln!("Error comparing memory usage: {}", e);
-    //     return;
-    // }
+    // Compare memory usage between load and view
+    if let Err(e) = compare_memory_usage() {
+        eprintln!("Error comparing memory usage: {}", e);
+        return;
+    }
 
     // Demonstrate exact reranking approach
     if let Err(e) = distributed_search_with_reranking() {
