@@ -3,11 +3,11 @@ use rand::{Rng, SeedableRng};
 use std::fs;
 use std::io::{Read, Write};
 use std::time::Instant;
-use usearch::{new_index, Index, IndexOptions, MetricKind, ScalarKind};
+use usearch::{Index, IndexOptions, MetricKind, ScalarKind, new_index};
 
 const DIMS: usize = 128;
 const SHARDS: usize = 3;
-const VECTORS_PER_SHARD: usize = 3333;
+const VECTORS_PER_SHARD: usize = 1_000_000;
 const TEST_VECTORS_COUNT: usize = 10;
 const TOP_K: usize = 5;
 
@@ -17,9 +17,21 @@ fn create_index_options(dims: usize) -> IndexOptions {
         metric: MetricKind::IP,
         quantization: ScalarKind::F32,
         multi: false,
-        connectivity: 0,
-        expansion_add: 0,
-        expansion_search: 0,
+        connectivity: 16,   // Good balance of accuracy vs speed (FAISS-like default)
+        expansion_add: 40,  // Much more aggressive for large datasets (was 128)
+        expansion_search: 16, // Faster search for large datasets (was 40)
+    }
+}
+
+fn create_flat_index_options(dims: usize) -> IndexOptions {
+    IndexOptions {
+        dimensions: dims,
+        metric: MetricKind::IP,
+        quantization: ScalarKind::F32,
+        multi: false,
+        connectivity: 0,    // No graph structure - flat/linear index
+        expansion_add: 0,   // No complex building process
+        expansion_search: 0, // Brute force search (perfect for small sets)
     }
 }
 
@@ -44,32 +56,52 @@ fn build_shards() -> Result<(), Box<dyn std::error::Error>> {
         SHARDS, VECTORS_PER_SHARD
     );
 
+    let total_start = Instant::now();
     let options = create_index_options(DIMS);
 
     for shard_id in 0..SHARDS {
+        let shard_start = Instant::now();
+        println!("  Building shard {}...", shard_id);
+
+        let index_creation_start = Instant::now();
         let index: Index = new_index(&options)?;
         index.reserve(VECTORS_PER_SHARD)?;
+        println!("    • Index creation: {:?}", index_creation_start.elapsed());
 
         // Generate vectors with different seeds for each shard
+        let vector_gen_start = Instant::now();
         let vectors = generate_random_vectors(VECTORS_PER_SHARD, DIMS, (shard_id * 1000) as u64);
+        println!("    • Vector generation: {:?}", vector_gen_start.elapsed());
 
         // Add vectors to this shard
+        let vector_add_start = Instant::now();
         let base_key = shard_id * VECTORS_PER_SHARD;
         for (i, vector) in vectors.iter().enumerate() {
             let key = (base_key + i) as u64;
             index.add(key, vector)?;
         }
+        println!(
+            "    • Adding {} vectors: {:?}",
+            VECTORS_PER_SHARD,
+            vector_add_start.elapsed()
+        );
 
         // Save shard to disk
+        let save_start = Instant::now();
         let shard_path = format!("./shard_{}.index", shard_id);
         index.save(&shard_path)?;
+        println!("    • Saving to disk: {:?}", save_start.elapsed());
+
         println!(
-            "  Shard {} saved with {} vectors to {}",
+            "  Shard {} completed in {:?} with {} vectors saved to {}",
             shard_id,
+            shard_start.elapsed(),
             index.size(),
             shard_path
         );
     }
+
+    println!("Total shard building time: {:?}", total_start.elapsed());
 
     // Generate and save test vectors
     println!("\nGenerating {} test vectors...", TEST_VECTORS_COUNT);
@@ -169,14 +201,20 @@ fn distributed_search_with_reranking() -> Result<(), Box<dyn std::error::Error>>
     let open_views_start = Instant::now();
 
     for shard_id in 0..SHARDS {
+        let shard_view_start = Instant::now();
         let index: Index = new_index(&options)?;
         let shard_path = format!("./shard_{}.index", shard_id);
         index.view(&shard_path)?; // Using view instead of load!
+        let shard_view_duration = shard_view_start.elapsed();
         println!(
             "Created view of shard {} with {} vectors (memory usage: {} bytes)",
             shard_id,
             index.size(),
             index.memory_usage()
+        );
+        println!(
+            "  • Shard {} view creation took {:?}",
+            shard_id, shard_view_duration
         );
         shards.push(index);
     }
@@ -210,14 +248,16 @@ fn distributed_search_with_reranking() -> Result<(), Box<dyn std::error::Error>>
         );
 
         // Step 2: Build a small in-memory index with just the candidates
+        // Use flat/linear index for reranking - no need for HNSW overhead on 60 vectors!
         let build_rerank_start = Instant::now();
-        let rerank_index: Index = new_index(&options)?;
+        let flat_options = create_flat_index_options(DIMS);
+        let rerank_index: Index = new_index(&flat_options)?;
         rerank_index.reserve(candidate_keys.len())?;
 
         for (key, shard_id) in &candidate_keys {
             // Retrieve the actual vector from the appropriate shard
             let mut vector = vec![0.0f32; DIMS];
-            shards[*shard_id].export(*key, &mut vector)?;
+            shards[*shard_id].get(*key, &mut vector)?;
             rerank_index.add(*key, &vector)?;
         }
         println!(
@@ -263,16 +303,16 @@ fn distributed_search_with_reranking() -> Result<(), Box<dyn std::error::Error>>
 
 fn main() {
     // Build shards and save test vectors
-    if let Err(e) = build_shards() {
-        eprintln!("Error building shards: {}", e);
-        return;
-    }
+    // if let Err(e) = build_shards() {
+    //     eprintln!("Error building shards: {}", e);
+    //     return;
+    // }
 
-    // Compare memory usage between load and view
-    if let Err(e) = compare_memory_usage() {
-        eprintln!("Error comparing memory usage: {}", e);
-        return;
-    }
+    // // Compare memory usage between load and view
+    // if let Err(e) = compare_memory_usage() {
+    //     eprintln!("Error comparing memory usage: {}", e);
+    //     return;
+    // }
 
     // Demonstrate exact reranking approach
     if let Err(e) = distributed_search_with_reranking() {
