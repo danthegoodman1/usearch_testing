@@ -3,6 +3,7 @@ use rand::{Rng, SeedableRng};
 use std::fs;
 use std::io::{Read, Write};
 use std::time::Instant;
+use std::collections::HashSet;
 use usearch::{Index, IndexOptions, MetricKind, ScalarKind, new_index};
 
 const DIMS: usize = 128;
@@ -10,6 +11,8 @@ const SHARDS: usize = 3;
 const VECTORS_PER_SHARD: usize = 1_000_000;
 const TEST_VECTORS_COUNT: usize = 10;
 const TOP_K: usize = 5;
+// Size of exact results taken from each shard to build global ground truth
+const EXACT_GT_PER_SHARD: usize = 100;
 
 fn create_index_options(dims: usize) -> IndexOptions {
     IndexOptions {
@@ -17,9 +20,9 @@ fn create_index_options(dims: usize) -> IndexOptions {
         metric: MetricKind::IP,
         quantization: ScalarKind::F32,
         multi: false,
-        connectivity: 16,   // Good balance of accuracy vs speed (FAISS-like default)
-        expansion_add: 40,  // Much more aggressive for large datasets (was 128)
-        expansion_search: 16, // Faster search for large datasets (was 40)
+        connectivity: 24,
+        expansion_add: 200,
+        expansion_search: 80,
     }
 }
 
@@ -224,6 +227,8 @@ fn distributed_search_with_reranking() -> Result<(), Box<dyn std::error::Error>>
     );
 
     // For each test vector
+    let mut recall_sum = 0.0f64;
+    let mut num_queries = 0usize;
     for (test_id, query) in test_vectors.iter().enumerate() {
         println!("\nQuery vector {}:", test_id);
 
@@ -296,13 +301,44 @@ fn distributed_search_with_reranking() -> Result<(), Box<dyn std::error::Error>>
                 shard_id
             );
         }
+
+        // Compute ground-truth global top-K by exact per-shard + merge
+        let mut all_exact: Vec<(u64, f32)> = Vec::with_capacity(SHARDS * EXACT_GT_PER_SHARD);
+        for shard in shards.iter() {
+            let per_shard_k = EXACT_GT_PER_SHARD.min(shard.size());
+            let exact = shard.exact_search(query, per_shard_k)?;
+            for (k, d) in exact.keys.iter().zip(exact.distances.iter()) {
+                all_exact.push((*k, *d));
+            }
+        }
+        // Distances: lower is better across metrics (IP returns negative distances)
+        all_exact.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+        all_exact.truncate(TOP_K);
+
+        let gt_keys: HashSet<u64> = all_exact.iter().map(|(k, _)| *k).collect();
+        let pred_keys: HashSet<u64> = final_matches.keys.iter().cloned().collect();
+        let intersect = gt_keys.intersection(&pred_keys).count();
+        let recall = intersect as f64 / TOP_K as f64;
+        println!("  Recall@{} vs exact global: {:.3}", TOP_K, recall);
+
+        recall_sum += recall;
+        num_queries += 1;
+    }
+
+    if num_queries > 0 {
+        println!(
+            "\nAverage Recall@{} across {} queries: {:.3}",
+            TOP_K,
+            num_queries,
+            recall_sum / num_queries as f64
+        );
     }
 
     Ok(())
 }
 
 fn main() {
-    // Build shards and save test vectors
+    // // Build shards and save test vectors
     // if let Err(e) = build_shards() {
     //     eprintln!("Error building shards: {}", e);
     //     return;
