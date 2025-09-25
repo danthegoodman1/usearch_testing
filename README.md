@@ -6,131 +6,186 @@ https://github.com/unum-cloud/usearch/tree/main/rust
 === Distributed Search (With Exact Reranking) ===
 
 Loaded 10 test vectors
-  • Loading test vectors took 12.5µs
-Created view of shard 0 with 3333 vectors (memory usage: 29736 bytes)
-Created view of shard 1 with 3333 vectors (memory usage: 29736 bytes)
-Created view of shard 2 with 3333 vectors (memory usage: 29736 bytes)
-  • Opening shard views took 215.792µs
+  • Loading test vectors took 33.959µs
+Created view of shard 0 with 1000000 vectors (memory usage: 8003072 bytes)
+  • Shard 0 view creation took 29.831ms
+Created view of shard 1 with 1000000 vectors (memory usage: 8003072 bytes)
+  • Shard 1 view creation took 32.243167ms
+Created view of shard 2 with 1000000 vectors (memory usage: 8003072 bytes)
+  • Shard 2 view creation took 30.18775ms
+  • Opening shard views took 92.296292ms
 
 Query vector 0:
   Collected 60 candidates from all shards
-    • Candidate collection took 456.583µs
-    • Building rerank index took 369.417µs
-    • Exact rerank search took 2µs
+    • Candidate collection took 8.098042ms
+    • Building rerank index took 299.875µs
+    • Exact rerank search took 2.292µs
   Exact reranking top-5 results:
-    1: key=4182 distance=-36.723827 (from shard 1)
-    2: key=7587 distance=-36.642307 (from shard 2)
-    3: key=2602 distance=-35.987671 (from shard 0)
-    4: key=8733 distance=-35.923222 (from shard 2)
-    5: key=4504 distance=-35.663845 (from shard 1)
+    1: key=2630527 distance=-38.487709 (from shard 2)
+    2: key=769720 distance=-38.425270 (from shard 0)
+    3: key=875971 distance=-37.939098 (from shard 0)
+    4: key=1818337 distance=-37.858330 (from shard 1)
+    5: key=2422974 distance=-37.785500 (from shard 2)
+  • Ground-truth exact + merge took 163.478875ms
+    • Shard 0 exact_search(100) took 53.615ms
+    • Shard 1 exact_search(100) took 55.01775ms
+    • Shard 2 exact_search(100) took 54.8385ms
+  Recall@5 vs exact global: 1.000
 
 Query vector 1:
   Collected 60 candidates from all shards
-    • Candidate collection took 157.291µs
-    • Building rerank index took 354.75µs
-    • Exact rerank search took 1.75µs
+    • Candidate collection took 1.804875ms
+    • Building rerank index took 315.125µs
+    • Exact rerank search took 2.458µs
   Exact reranking top-5 results:
-    1: key=20 distance=-36.966377 (from shard 0)
-    2: key=7587 distance=-36.529949 (from shard 2)
-    3: key=4858 distance=-36.487251 (from shard 1)
-    4: key=1940 distance=-36.207767 (from shard 0)
-    5: key=2518 distance=-36.185081 (from shard 0)
+    1: key=2469668 distance=-39.027069 (from shard 2)
+    2: key=2630527 distance=-38.927311 (from shard 2)
+    3: key=2986511 distance=-38.696934 (from shard 2)
+    4: key=1080120 distance=-38.562710 (from shard 1)
+    5: key=620632 distance=-38.413147 (from shard 0)
+  • Ground-truth exact + merge took 92.219667ms
+    • Shard 0 exact_search(100) took 30.633083ms
+    • Shard 1 exact_search(100) took 30.943792ms
+    • Shard 2 exact_search(100) took 30.635791ms
+  Recall@5 vs exact global: 1.000
 
 Query vector 2:
   Collected 60 candidates from all shards
-    • Candidate collection took 152.833µs
-    • Building rerank index took 369.542µs
-    • Exact rerank search took 2µs
+    • Candidate collection took 1.789125ms
+    • Building rerank index took 293.792µs
+    • Exact rerank search took 2.458µs
   Exact reranking top-5 results:
-    1: key=7587 distance=-39.470642 (from shard 2)
-    2: key=1734 distance=-39.343460 (from shard 0)
-    3: key=8234 distance=-39.114182 (from shard 2)
-    4: key=4633 distance=-39.101620 (from shard 1)
-    5: key=8266 distance=-38.916084 (from shard 2)
+    1: key=1080120 distance=-41.664375 (from shard 1)
+    2: key=2947400 distance=-41.434456 (from shard 2)
+    3: key=1088171 distance=-41.148102 (from shard 1)
+    4: key=254849 distance=-41.024860 (from shard 0)
+    5: key=1738941 distance=-41.001816 (from shard 1)
+  • Ground-truth exact + merge took 92.295125ms
+    • Shard 0 exact_search(100) took 30.718334ms
+    • Shard 1 exact_search(100) took 30.811709ms
+    • Shard 2 exact_search(100) took 30.75875ms
+  Recall@5 vs exact global: 1.000
 
 Query vector 3:
   Collected 60 candidates from all shards
-    • Candidate collection took 154.833µs
-    • Building rerank index took 359.083µs
-    • Exact rerank search took 1.917µs
+    • Candidate collection took 1.804625ms
+    • Building rerank index took 293.208µs
+    • Exact rerank search took 2.542µs
   Exact reranking top-5 results:
-    1: key=7587 distance=-38.425995 (from shard 2)
-    2: key=7915 distance=-37.478065 (from shard 2)
-    3: key=8884 distance=-37.230236 (from shard 2)
-    4: key=6555 distance=-36.956955 (from shard 1)
-    5: key=3934 distance=-36.894711 (from shard 1)
+    1: key=1639566 distance=-40.011330 (from shard 1)
+    2: key=746435 distance=-39.885635 (from shard 0)
+    3: key=2158668 distance=-39.701622 (from shard 2)
+    4: key=2827240 distance=-39.623573 (from shard 2)
+    5: key=2422974 distance=-39.534302 (from shard 2)
+  • Ground-truth exact + merge took 91.286791ms
+    • Shard 0 exact_search(100) took 30.537083ms
+    • Shard 1 exact_search(100) took 30.393625ms
+    • Shard 2 exact_search(100) took 30.349542ms
+  Recall@5 vs exact global: 1.000
 
 Query vector 4:
   Collected 60 candidates from all shards
-    • Candidate collection took 143.875µs
-    • Building rerank index took 352.167µs
-    • Exact rerank search took 1.709µs
+    • Candidate collection took 1.753458ms
+    • Building rerank index took 298.416µs
+    • Exact rerank search took 2.292µs
   Exact reranking top-5 results:
-    1: key=8234 distance=-38.257912 (from shard 2)
-    2: key=6051 distance=-38.155411 (from shard 1)
-    3: key=6481 distance=-37.265381 (from shard 1)
-    4: key=5016 distance=-36.920650 (from shard 1)
-    5: key=2006 distance=-36.850101 (from shard 0)
+    1: key=2887975 distance=-40.472237 (from shard 2)
+    2: key=234577 distance=-39.453110 (from shard 0)
+    3: key=2827240 distance=-39.451736 (from shard 2)
+    4: key=612922 distance=-39.243252 (from shard 0)
+    5: key=282984 distance=-39.222237 (from shard 0)
+  • Ground-truth exact + merge took 91.468916ms
+    • Shard 0 exact_search(100) took 30.688916ms
+    • Shard 1 exact_search(100) took 30.3015ms
+    • Shard 2 exact_search(100) took 30.455ms
+  Recall@5 vs exact global: 1.000
 
 Query vector 5:
   Collected 60 candidates from all shards
-    • Candidate collection took 135.292µs
-    • Building rerank index took 355.708µs
-    • Exact rerank search took 1.917µs
+    • Candidate collection took 1.864708ms
+    • Building rerank index took 297.291µs
+    • Exact rerank search took 5.208µs
   Exact reranking top-5 results:
-    1: key=8266 distance=-37.163532 (from shard 2)
-    2: key=6051 distance=-36.775517 (from shard 1)
-    3: key=2982 distance=-36.773186 (from shard 0)
-    4: key=8733 distance=-36.658104 (from shard 2)
-    5: key=5016 distance=-36.335869 (from shard 1)
+    1: key=1818337 distance=-39.707321 (from shard 1)
+    2: key=1129714 distance=-38.799534 (from shard 1)
+    3: key=234577 distance=-38.739075 (from shard 0)
+    4: key=783830 distance=-38.727921 (from shard 0)
+    5: key=1598392 distance=-38.634331 (from shard 1)
+  • Ground-truth exact + merge took 92.695584ms
+    • Shard 0 exact_search(100) took 30.318792ms
+    • Shard 1 exact_search(100) took 30.457208ms
+    • Shard 2 exact_search(100) took 31.9025ms
+  Recall@5 vs exact global: 1.000
 
 Query vector 6:
   Collected 60 candidates from all shards
-    • Candidate collection took 138.833µs
-    • Building rerank index took 357.708µs
-    • Exact rerank search took 1.834µs
+    • Candidate collection took 1.78825ms
+    • Building rerank index took 324.875µs
+    • Exact rerank search took 4.959µs
   Exact reranking top-5 results:
-    1: key=4272 distance=-38.716942 (from shard 1)
-    2: key=8435 distance=-38.716911 (from shard 2)
-    3: key=3691 distance=-38.685787 (from shard 1)
-    4: key=6555 distance=-38.412781 (from shard 1)
-    5: key=7455 distance=-38.366539 (from shard 2)
+    1: key=620632 distance=-41.558220 (from shard 0)
+    2: key=234577 distance=-41.352226 (from shard 0)
+    3: key=805858 distance=-41.347534 (from shard 0)
+    4: key=2991360 distance=-41.157536 (from shard 2)
+    5: key=746435 distance=-41.139072 (from shard 0)
+  • Ground-truth exact + merge took 92.914375ms
+    • Shard 0 exact_search(100) took 30.511167ms
+    • Shard 1 exact_search(100) took 31.016125ms
+    • Shard 2 exact_search(100) took 31.340959ms
+  Recall@5 vs exact global: 1.000
 
 Query vector 7:
   Collected 60 candidates from all shards
-    • Candidate collection took 134.083µs
-    • Building rerank index took 356.583µs
-    • Exact rerank search took 1.791µs
+    • Candidate collection took 1.924417ms
+    • Building rerank index took 378.375µs
+    • Exact rerank search took 7.833µs
   Exact reranking top-5 results:
-    1: key=5016 distance=-34.548325 (from shard 1)
-    2: key=8349 distance=-33.648853 (from shard 2)
-    3: key=5212 distance=-32.994324 (from shard 1)
-    4: key=2414 distance=-32.924534 (from shard 0)
-    5: key=8733 distance=-32.800755 (from shard 2)
+    1: key=2947400 distance=-35.898407 (from shard 2)
+    2: key=2056538 distance=-35.475960 (from shard 2)
+    3: key=237414 distance=-35.465527 (from shard 0)
+    4: key=859596 distance=-35.319340 (from shard 0)
+    5: key=612922 distance=-35.297379 (from shard 0)
+  • Ground-truth exact + merge took 95.156292ms
+    • Shard 0 exact_search(100) took 31.821667ms
+    • Shard 1 exact_search(100) took 31.73425ms
+    • Shard 2 exact_search(100) took 31.590208ms
+  Recall@5 vs exact global: 1.000
 
 Query vector 8:
   Collected 60 candidates from all shards
-    • Candidate collection took 138.5µs
-    • Building rerank index took 362µs
-    • Exact rerank search took 1.75µs
+    • Candidate collection took 1.752208ms
+    • Building rerank index took 330.125µs
+    • Exact rerank search took 2.625µs
   Exact reranking top-5 results:
-    1: key=6555 distance=-37.491554 (from shard 1)
-    2: key=7587 distance=-37.336205 (from shard 2)
-    3: key=5212 distance=-37.295551 (from shard 1)
-    4: key=6632 distance=-37.016273 (from shard 1)
-    5: key=4633 distance=-36.979610 (from shard 1)
+    1: key=2818912 distance=-39.398262 (from shard 2)
+    2: key=2630527 distance=-39.314247 (from shard 2)
+    3: key=780611 distance=-39.074844 (from shard 0)
+    4: key=1818337 distance=-39.069729 (from shard 1)
+    5: key=357871 distance=-39.008282 (from shard 0)
+  • Ground-truth exact + merge took 95.033667ms
+    • Shard 0 exact_search(100) took 31.479667ms
+    • Shard 1 exact_search(100) took 32.315417ms
+    • Shard 2 exact_search(100) took 31.206792ms
+  Recall@5 vs exact global: 1.000
 
 Query vector 9:
   Collected 60 candidates from all shards
-    • Candidate collection took 138.041µs
-    • Building rerank index took 365.083µs
-    • Exact rerank search took 1.75µs
+    • Candidate collection took 2.19425ms
+    • Building rerank index took 350.166µs
+    • Exact rerank search took 5.708µs
   Exact reranking top-5 results:
-    1: key=6555 distance=-40.274170 (from shard 1)
-    2: key=5313 distance=-40.019382 (from shard 1)
-    3: key=9558 distance=-39.832466 (from shard 2)
-    4: key=3615 distance=-39.689705 (from shard 1)
-    5: key=4272 distance=-39.516075 (from shard 1)
+    1: key=2986511 distance=-42.028530 (from shard 2)
+    2: key=234577 distance=-42.015015 (from shard 0)
+    3: key=2858630 distance=-41.819557 (from shard 2)
+    4: key=2709913 distance=-41.540531 (from shard 2)
+    5: key=237414 distance=-41.531784 (from shard 0)
+  • Ground-truth exact + merge took 94.026541ms
+    • Shard 0 exact_search(100) took 30.758167ms
+    • Shard 1 exact_search(100) took 31.061834ms
+    • Shard 2 exact_search(100) took 32.194333ms
+  Recall@5 vs exact global: 1.000
+
+Average Recall@5 across 10 queries: 1.000
 ```
 
 ```
