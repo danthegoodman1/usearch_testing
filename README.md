@@ -132,3 +132,9 @@ Query vector 9:
     4: key=3615 distance=-39.689705 (from shard 1)
     5: key=4272 distance=-39.516075 (from shard 1)
 ```
+
+```
+-rw-r--r--  1 dangoodman  staff   630M Sep 24 16:37 shard_2.index
+-rw-r--r--  1 dangoodman  staff   630M Sep 24 16:37 shard_1.index
+-rw-r--r--  1 dangoodman  staff   630M Sep 24 16:37 shard_0.index
+```
