@@ -7,7 +7,7 @@ use usearch::{new_index, Index, IndexOptions, MetricKind, ScalarKind};
 
 const DIMS: usize = 128;
 const SHARDS: usize = 3;
-const VECTORS_PER_SHARD: usize = 333;
+const VECTORS_PER_SHARD: usize = 3333;
 const TEST_VECTORS_COUNT: usize = 10;
 const TOP_K: usize = 5;
 
