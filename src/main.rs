@@ -48,10 +48,22 @@ fn generate_random_vectors(count: usize, dims: usize, seed: u64) -> Vec<Vec<f32>
         for value in &mut vector {
             *value = rng.random();
         }
+        normalize_vector(&mut vector);
         vectors.push(vector);
     }
 
     vectors
+}
+
+fn normalize_vector(vector: &mut [f32]) {
+    let norm_sq: f64 = vector.iter().map(|v| (*v as f64) * (*v as f64)).sum();
+    let norm = norm_sq.sqrt() as f32;
+
+    if norm > 0.0 {
+        for value in vector.iter_mut() {
+            *value /= norm;
+        }
+    }
 }
 
 fn build_shards() -> Result<(), Box<dyn std::error::Error>> {
@@ -155,7 +167,9 @@ fn load_test_vectors() -> Result<Vec<Vec<f32>>, Box<dyn std::error::Error>> {
 
     let mut vectors = Vec::with_capacity(TEST_VECTORS_COUNT);
     for chunk in floats.chunks_exact(DIMS) {
-        vectors.push(chunk.to_vec());
+        let mut vector = chunk.to_vec();
+        normalize_vector(&mut vector);
+        vectors.push(vector);
     }
 
     Ok(vectors)
