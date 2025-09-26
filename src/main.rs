@@ -18,19 +18,19 @@ const EXACT_GT_PER_SHARD: usize = 100;
 fn create_index_options(dims: usize) -> IndexOptions {
     IndexOptions {
         dimensions: dims,
-        metric: MetricKind::IP,
+        metric: MetricKind::Cos,
         quantization: ScalarKind::F32,
         multi: false,
         connectivity: 24,
         expansion_add: 200,
-        expansion_search: 80,
+        expansion_search: 30,
     }
 }
 
 fn create_flat_index_options(dims: usize) -> IndexOptions {
     IndexOptions {
         dimensions: dims,
-        metric: MetricKind::IP,
+        metric: MetricKind::Cos,
         quantization: ScalarKind::F32,
         multi: false,
         connectivity: 0,    // No graph structure - flat/linear index
